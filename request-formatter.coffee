@@ -1,7 +1,34 @@
-_ = require 'lodash'
+_     = require 'lodash'
+debug = require('debug')('request-formatter:index')
 
 class RequestFormatter
-  constructor: () ->
+  constructor: (channelJson) ->
+    @channelJson = channelJson
+    @resources   = @channelJson.application.resources
+
+  processMessage: (message, auth, defaultUrlParams) =>
+    {payload} = message
+    {endpoint, params} = payload
+    requestParams = params
+
+    target = _.find @resources, (item) -> item.displayName == endpoint
+    debug 'Found Endpoint', target
+
+    {url, params, httpMethod} = target
+
+    bodyParams  = @matchStyleParams params, requestParams, 'body'
+    queryParams = @matchStyleParams params, requestParams, 'query'
+    urlParams   = @matchStyleParams params, requestParams, 'url'
+
+    debug 'body params', bodyParams
+    debug 'query params', queryParams
+
+    requestUrl = @replaceUrlParams url, urlParams, defaultUrlParams
+    debug 'replaceUrlParams: ', requestUrl
+
+    requestOptions = @formatRequest requestUrl, bodyParams, queryParams, httpMethod
+    debug 'sending request', requestOptions
+    requestOptions
 
   matchStyleParams: (params, requestParams, style) =>
     styleParams = {}
@@ -28,10 +55,25 @@ class RequestFormatter
         'x-li-format': 'json'
       uri: requestUrl
       method: httpMethod
-      followAllRedirects: true
+      followAllRedirects: @channelJson.followAllRedirects ? true
       qs: queryParams
 
-    config.json = bodyParams unless _.isEmpty(bodyParams)
+    config.strictSSL = false if @channelJson.skipVerifySSL
+
+    if @channelJson.uploadData
+      buf = new Buffer @channelJson.uploadData, 'base64'
+      config.body = buf
+      config.encoding = null
+      config.headers['Content-Type'] = 'text/plain'
+      delete config.headers['Accept']
+    else
+      if @channelJson.bodyFormat == 'json'
+        json = @_omitEmptyObjects bodyParams
+        config.json = json unless _.isEmpty(json)
+        config.json = true if _.isEmpty(json)
+      else
+        config.form = bodyParams
+
     config
 
 module.exports = RequestFormatter
