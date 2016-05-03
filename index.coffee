@@ -2,7 +2,8 @@
 debug           = require('debug')('meshblu-connector-meshblu-xenmobile:index')
 _               = require 'lodash'
 schemas         = require './legacySchema'
-collection         = require './collection'
+collection      = require './collection'
+request         = require 'request'
 
 class MeshbluXenmobile extends EventEmitter
   constructor: ->
@@ -23,19 +24,19 @@ class MeshbluXenmobile extends EventEmitter
 
     { url, params, httpMethod } = target
 
-    bodyParams = @matchStyleParams params, requestParams, 'body'
+    bodyParams  = @matchStyleParams params, requestParams, 'body'
     queryParams = @matchStyleParams params, requestParams, 'query'
-    urlParams = @matchStyleParams params, requestParams, 'url'
+    urlParams   = @matchStyleParams params, requestParams, 'url'
 
     debug 'body params', bodyParams
     debug 'query params', queryParams
 
     requestUrl = @replaceUrlParams url, urlParams
     debug 'replaceUrlParams: ', requestUrl
-    # match endpoint to displayName
-    # format request
-    # add auth
-    # send request
+
+    requestOptions = @formatRequest requestUrl, bodyParams, queryParams, httpMethod
+    debug 'sending request', requestOptions
+    # request requestOptions, (error, response, body) =>
 
   onConfig: (config) =>
     debug 'on config', @device.uuid
@@ -70,5 +71,18 @@ class MeshbluXenmobile extends EventEmitter
       url = url.replace(re, value)
     return url
 
+  formatRequest: (requestUrl, bodyParams, queryParams, httpMethod) =>
+    config =
+      headers:
+        'Accept': 'application/json'
+        'User-Agent': 'Octoblu/1.0.0'
+        'x-li-format': 'json'
+      uri: requestUrl
+      method: httpMethod
+      followAllRedirects: true
+      qs: queryParams
+
+    config.json = bodyParams unless _.isEmpty(bodyParams)
+    config
 
 module.exports = MeshbluXenmobile
