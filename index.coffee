@@ -1,11 +1,11 @@
-{EventEmitter}   = require 'events'
-debug            = require('debug')('meshblu-connector-meshblu-xenmobile:index')
-_                = require 'lodash'
-schemas          = require './legacySchema'
-channelJson       = require './channelJson'
-request          = require 'request'
-RequestFormatter = require './request-formatter'
-format           = new RequestFormatter(channelJson)
+{EventEmitter}          = require 'events'
+debug                   = require('debug')('meshblu-connector-meshblu-xenmobile:index')
+_                       = require 'lodash'
+schemas                 = require './legacySchema'
+channelJson             = require './channelJson'
+request                 = require 'request'
+OctobluRequestFormatter = require 'octoblu-request-formatter'
+format                  = new OctobluRequestFormatter(channelJson)
 
 class MeshbluXenmobile extends EventEmitter
   constructor: ->
@@ -17,13 +17,25 @@ class MeshbluXenmobile extends EventEmitter
 
   onMessage: (message) =>
     debug 'onMessage', message.payload
-    requestParams = format.processMessage message, @auth, @defaultUrlParams
-    debug 'request params', requestParams
+
+    requestParams = format.processMessage message.payload, @auth, @defaultUrlParams
+    requestParams.headers.auth_token = @auth_token if @auth_token?
+    debug 'formatted request', requestParams
+
+    if @auth_token?
+      debug 'Sending Request'
+      request requestParams, (error, response, body) =>
+        return @sendError error if error?
+        @emit 'message', devices: ["*"], payload: body
+        debug 'Body: ', body
+
+  sendError: (ErrorMessage) =>
+    @emit 'message', devices: ["*"], topic: 'error', payload: ErrorMessage
 
   onConfig: (config) =>
     debug 'on config', @device.uuid
     @options = config.options
-    
+
     @defaultUrlParams = {
       ':hostname': @options.host
       ':port': @options.port
@@ -32,9 +44,29 @@ class MeshbluXenmobile extends EventEmitter
       'username': @options.username
       'password': @options.password
     }
+    return @login() unless config.xenmobile_auth_token?
+    @auth_token = config.xenmobile_auth_token
 
   start: (@device) =>
     debug 'started', @device.uuid
     @emit 'update', schemas
+
+  login: () =>
+    { host, port } = @options
+    url = host + ':' + port + '/xenmobile/api/v1/authentication/login'
+    debug 'url', url
+    request.post {
+      url: url
+      json:
+        login: @auth.username
+        password: @auth.password
+    }, (error, response, body) =>
+      debug(error) if error?
+      return error if error?
+      @auth_token = body.auth_token
+      @updateAuth body.auth_token
+
+  updateAuth: (newAuth) =>
+    @emit 'update', xenmobile_auth_token: newAuth
 
 module.exports = MeshbluXenmobile

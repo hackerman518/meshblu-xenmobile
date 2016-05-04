@@ -30,7 +30,9 @@
     "coffee-script": "^1.10.0",
     "debug": "^2.2.0",
     "eventemitter2": "^1.0.0",
-    "meshblu-connector-runner": "^3.0.0"
+    "meshblu-connector-runner": "^3.0.0",
+    "octoblu-request-formatter": "^0.1.1",
+    "request": "^2.72.0"
   },
   "meshbluConnector": {
     "connectorAssemblerVersion": "v7.0.0",
