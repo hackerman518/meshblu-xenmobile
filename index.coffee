@@ -17,7 +17,7 @@ class MeshbluXenmobile extends EventEmitter
 
   onMessage: (message) =>
     debug 'onMessage', message.payload
-
+    return if !message.payload.endpoint?
     requestParams = format.processMessage message.payload, @auth, @defaultUrlParams
     requestParams.headers.auth_token = @auth_token if @auth_token?
     debug 'formatted request', requestParams
@@ -26,6 +26,7 @@ class MeshbluXenmobile extends EventEmitter
       debug 'Sending Request'
       request requestParams, (error, response, body) =>
         return @sendError error if error?
+        body = JSON.parse(body)
         @emit 'message', devices: ["*"], payload: body
         debug 'Body: ', body
 
