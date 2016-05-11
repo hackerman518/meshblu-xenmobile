@@ -1219,38 +1219,6 @@ channelJson =
         'httpMethod': 'DELETE'
         'url': ':hostname::port/xenmobile/api/v1/serverproperties'
       }
-      {
-        'params': [ {
-          'required': 'false'
-          'value': ''
-          'type': 'string'
-          'style': ''
-          'name': ''
-          'displayName': ''
-        } ]
-        'path': '/'
-        'displayName': ''
-        'authentication': 'required': 'true'
-        'doc': 'url': 'http://docs.citrix.com/en-us/xenmobile/10-1/xmob-support-wrapper/xenmobile-rest-api-reference.html'
-        'httpMethod': 'GET'
-        'url': ':hostname::port/xenmobile/api/v1/'
-      }
-      {
-        'params': [ {
-          'required': 'false'
-          'value': ''
-          'type': 'string'
-          'style': ''
-          'name': ''
-          'displayName': ''
-        } ]
-        'path': '/'
-        'displayName': ''
-        'authentication': 'required': 'true'
-        'doc': 'url': 'http://docs.citrix.com/en-us/xenmobile/10-1/xmob-support-wrapper/xenmobile-rest-api-reference.html'
-        'httpMethod': 'GET'
-        'url': ':hostname::port/xenmobile/api/v1/'
-      }
     ]
 
 module.exports = channelJson
