@@ -1,8 +1,7 @@
 {EventEmitter}          = require 'events'
 debug                   = require('debug')('meshblu-connector-meshblu-xenmobile:index')
 _                       = require 'lodash'
-# schemas                 = require './legacySchema'
-schemas                 = require './testSchema.json'
+schemas                 = require './legacySchemas.json'
 channelJson             = require './channelJson'
 request                 = require 'request'
 OctobluRequestFormatter = require 'octoblu-request-formatter'

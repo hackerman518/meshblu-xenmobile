@@ -1,6 +1,6 @@
 {
   "name": "meshblu-connector-meshblu-xenmobile",
-  "version": "1.0.0",
+  "version": "0.1.1",
   "description": "Meshblu Connector MeshbluXenmobile",
   "homepage": "https://github.com/octoblu/meshblu-xenmobile",
   "bugs": "https://github.com/octoblu/meshblu-xenmobile/issues",
