@@ -10,6 +10,7 @@ format                  = new OctobluRequestFormatter(channelJson)
 class MeshbluXenmobile extends EventEmitter
   constructor: ->
     debug 'MeshbluXenmobile constructed'
+    @options = {}
 
   close: (callback) =>
     debug 'on close'
@@ -37,19 +38,21 @@ class MeshbluXenmobile extends EventEmitter
     debug 'on config', @device.uuid
     @options = config.options
 
-    @defaultUrlParams = {
-      ':hostname': @options.host
-      ':port': @options.port
-    }
-    @auth = {
-      'username': @options.username
-      'password': @options.password
-    }
-    return @login() unless config.xenmobile_auth_token?
-    @auth_token = config.xenmobile_auth_token
+    if _.has @options, 'host'
+      @defaultUrlParams = {
+        ':hostname': @options.host
+        ':port': @options.port
+      }
+      @auth = {
+        'username': @options.username
+        'password': @options.password
+      }
+      return @login() unless config.xenmobile_auth_token?
+      @auth_token = config.xenmobile_auth_token
 
   start: (@device) =>
     debug 'started', @device.uuid
+    schemas = _.extend schemas, format.buildSchema()
     @emit 'update', schemas
 
   login: () =>
