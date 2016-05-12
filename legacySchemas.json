@@ -1,4 +1,5 @@
 {
+	"logo": "https://s3-us-west-2.amazonaws.com/octoblu-icons/channel/xenmobile.svg",
 	"optionsSchema": {
   "type": "object",
     "properties": {
