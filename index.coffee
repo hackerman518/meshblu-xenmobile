@@ -18,7 +18,7 @@ class MeshbluXenmobile extends EventEmitter
 
   onMessage: (message) =>
     debug 'onMessage', message.payload
-    return if !message.payload.endpoint?
+    return unless message.payload.endpoint?
     requestParams = format.processMessage message.payload, @auth, @defaultUrlParams
     requestParams.headers.auth_token = @auth_token if @auth_token?
     debug 'formatted request', requestParams
@@ -26,13 +26,44 @@ class MeshbluXenmobile extends EventEmitter
     if @auth_token?
       debug 'Sending Request'
       request requestParams, (error, response, body) =>
-        return @sendError error if error?
-        body = JSON.parse(body)
-        @emit 'message', devices: ["*"], payload: body
+        if error?
+          errorResponse = {
+            fromUuid: message.fromUuid
+            fromNodeId: message.metadata.flow.fromNodeId
+            error: error
+          }
+          return @sendError errorResponse
+        body = JSON.parse(body) if @isJson body
+        response = {
+          fromUuid: message.fromUuid
+          fromNodeId: message.metadata.flow.fromNodeId
+          metadata: message.metadata
+          data: body
+        }
+        @sendResponse response
         debug 'Body: ', body
 
-  sendError: (ErrorMessage) =>
-    @emit 'message', devices: ["*"], topic: 'error', payload: ErrorMessage
+  sendResponse: ({fromUuid, fromNodeId, metadata, data}) =>
+   @emit 'message', {
+     devices: [fromUuid]
+     payload:
+       from: fromNodeId
+       metadata: metadata
+       data: data
+   }
+
+  sendError: ({fromUuid, fromNodeId, error}) =>
+    code = error.code ? 500
+    @emit 'message', {
+      devices: [fromUuid]
+      payload:
+        from: fromNodeId
+        metadata:
+          code: code
+          status: http.STATUS_CODES[code]
+          error:
+            message: error.message ? 'Unknown Error'
+    }
 
   onConfig: (config) =>
     debug 'on config', @device.uuid
@@ -52,8 +83,12 @@ class MeshbluXenmobile extends EventEmitter
 
   start: (@device) =>
     debug 'started', @device.uuid
-    schemas = _.extend schemas, format.buildSchema()
-    @emit 'update', schemas
+    update = _.extend schemas, format.buildSchema()
+    update.octoblu ?= {}
+    update.octoblu.flow ?= {}
+    update.octoblu.flow.forwardMetadata = true
+
+    @emit 'update', update
 
   login: () =>
     { host, port } = @options
@@ -72,5 +107,12 @@ class MeshbluXenmobile extends EventEmitter
 
   updateAuth: (newAuth) =>
     @emit 'update', xenmobile_auth_token: newAuth
+
+  isJson: (str) ->
+    try
+      JSON.parse str
+    catch e
+      return false
+    true
 
 module.exports = MeshbluXenmobile
