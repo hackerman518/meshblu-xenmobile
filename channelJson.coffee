@@ -7,6 +7,7 @@ channelJson =
   'name': 'XenMobile'
   'type': 'channel:xenmobile'
   'skipVerifySSL': true
+  'bodyFormat': 'json'
   '__v': 0
   'defaultParams': [
     {
